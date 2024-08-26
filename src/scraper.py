@@ -1,17 +1,19 @@
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.service import Service as BraveService
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-import requests
+import re
 
 def setup_driver():
   chrome_options = Options()
+  chrome_options.binary_location = "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
   chrome_options.add_argument("--headless")
   chrome_options.add_argument("--no-sandbox")
   chrome_options.add_argument("--disable-dev-shm-usage")
-  service = Service(ChromeDriverManager().install())
+  chrome_options.add_argument('--ignore-certificate-errors')
+  
+  service = BraveService("C:/Users/moses_y/OneDrive/Desktop/ML Projects/chromedriver-win64/chromedriver.exe")
   return webdriver.Chrome(service=service, options=chrome_options)
 
 def fetch_page_content(url, max_retries=3):
@@ -19,7 +21,7 @@ def fetch_page_content(url, max_retries=3):
       try:
           driver = setup_driver()
           driver.get(url)
-          time.sleep(5)  # Wait for JavaScript to load content
+          time.sleep(5)
           page_content = driver.page_source
           driver.quit()
           return page_content
@@ -29,27 +31,45 @@ def fetch_page_content(url, max_retries=3):
               raise
           time.sleep(5)
 
+def clean_text(text):
+  return ' '.join(text.split()).strip()
+
 def parse_jobs(html_content):
   soup = BeautifulSoup(html_content, 'html.parser')
-  job_listings = soup.find_all('div', class_='job')
-  
+  job_listings = soup.find_all('a', href=re.compile(r'/companies/.+/jobs/.+'))
+
   jobs = []
-  for job in job_listings:
-      title = job.find('h2').text.strip()
-      company = job.find('span', class_='company').text.strip()
-      location = job.find('span', class_='location').text.strip()
-      url = 'https://www.ycombinator.com' + job.find('a')['href']
+  for job_elem in job_listings:
+      url = job_elem['href'] if job_elem.has_attr('href') else 'No URL'
       
-      jobs.append({
+      match = re.search(r'/companies/(.+)/jobs/[^-]+-(.+)', url)
+      if match:
+          company = clean_text(match.group(1).replace('-', ' ').title())
+          title = clean_text(match.group(2).replace('-', ' ').title())
+      else:
+          company = 'Unknown Company'
+          title = 'Unknown Title'
+      
+      location_elem = job_elem.find('div', string=re.compile(r'(Remote|On-site|Hybrid)'))
+      location = clean_text(location_elem.text) if location_elem else 'Location not available'
+      
+      job = {
           'title': title,
           'company': company,
           'location': location,
-          'url': url
-      })
-  
+          'url': f"https://www.ycombinator.com{url}"
+      }
+      jobs.append(job)
+
   return jobs
 
 def scrape_jobs():
   url = 'https://www.ycombinator.com/jobs'
   html_content = fetch_page_content(url)
   return parse_jobs(html_content)
+
+# Test the scraping
+jobs = scrape_jobs()
+print(f"Found {len(jobs)} job listings")
+for job in jobs[:5]:  # Print first 5 jobs as a sample
+  print(job)

@@ -1,27 +1,23 @@
 import unittest
-from unittest.mock import patch
 from src.scraper import parse_jobs
 
 class TestScraper(unittest.TestCase):
-  @patch('src.scraper.fetch_page_content')
-  def test_parse_jobs(self, mock_fetch_page_content):
-      mock_html = '''
+  def test_parse_jobs(self):
+      # Example HTML content for testing
+      html_content = '''
       <div class="job">
           <h2>Software Engineer</h2>
-          <span class="company">TechCorp</span>
-          <span class="location">San Francisco, CA</span>
-          <a href="/jobs/123">Apply</a>
+          <span class="company">Tech Co</span>
+          <span class="location">Remote</span>
+          <a href="/jobs/1">Job Link</a>
       </div>
       '''
-      mock_fetch_page_content.return_value = mock_html
-      
-      jobs = parse_jobs(mock_html)
-      
+      jobs = parse_jobs(html_content)
       self.assertEqual(len(jobs), 1)
       self.assertEqual(jobs[0]['title'], 'Software Engineer')
-      self.assertEqual(jobs[0]['company'], 'TechCorp')
-      self.assertEqual(jobs[0]['location'], 'San Francisco, CA')
-      self.assertEqual(jobs[0]['url'], 'https://www.ycombinator.com/jobs/123')
+      self.assertEqual(jobs[0]['company'], 'Tech Co')
+      self.assertEqual(jobs[0]['location'], 'Remote')
+      self.assertEqual(jobs[0]['url'], 'https://www.ycombinator.com/jobs/1')
 
 if __name__ == '__main__':
   unittest.main()

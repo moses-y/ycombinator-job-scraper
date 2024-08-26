@@ -23,6 +23,7 @@ jobs:
         TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
         TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
         TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
+        YOUR_PHONE_NUMBER: ${{ secrets.YOUR_PHONE_NUMBER }}
       run: python src/main.py
     - name: Send email on failure
       if: failure()

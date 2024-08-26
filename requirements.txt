@@ -3,3 +3,4 @@ beautifulsoup4
 requests
 webdriver_manager
 twilio
+python-dotenv
