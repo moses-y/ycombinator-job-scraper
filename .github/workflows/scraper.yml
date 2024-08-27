@@ -2,7 +2,7 @@ name: Job Scraper
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 7 * * *'  # Runs at 7 AM UTC (10 AM EAT) every day
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Run scraper
+    - name: Run scraper and send WhatsApp notification
       env:
         TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
         TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
