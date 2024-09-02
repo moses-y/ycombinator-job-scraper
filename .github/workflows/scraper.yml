@@ -9,10 +9,10 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.9'
 
@@ -51,15 +51,13 @@ jobs:
         YOUR_PHONE_NUMBER: ${{ secrets.YOUR_PHONE_NUMBER }}
       run: python src/main.py
 
-    - name: Send email on failure
+    - name: Send WhatsApp notification on failure
       if: failure()
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.gmail.com
-        server_port: 465
-        username: ${{secrets.EMAIL_USER}}
-        password: ${{secrets.EMAIL_PASS}}
-        subject: Job Scraper Workflow Failed
-        body: The job scraper workflow has failed. Please check the GitHub Actions logs for more information.
-        to: mosesyebei@gmail.com
-        from: GitHub Actions
+      env:
+        TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+        TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+        TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
+        YOUR_PHONE_NUMBER: ${{ secrets.YOUR_PHONE_NUMBER }}
+      run: |
+        pip install twilio
+        python -c "from twilio.rest import Client; client = Client('$TWILIO_ACCOUNT_SID', '$TWILIO_AUTH_TOKEN'); client.messages.create(body='Job Scraper Workflow Failed. Please check the GitHub Actions logs for more information.', from_='whatsapp:$TWILIO_PHONE_NUMBER', to='whatsapp:$YOUR_PHONE_NUMBER')"
