@@ -1,10 +1,14 @@
 import time
+import logging
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import re
 import os
+
+logger = logging.getLogger(__name__)
 
 def setup_driver():
   chrome_options = Options()
@@ -13,19 +17,7 @@ def setup_driver():
   chrome_options.add_argument("--disable-dev-shm-usage")
   chrome_options.add_argument('--ignore-certificate-errors')
 
-  # Path to the ChromeDriver
-  chromedriver_path = "C:/Users/moses_y/OneDrive/Desktop/ML Projects/ycombinator-job-scraper/assets/chromedriver-win64/chromedriver.exe"
-
-  # Check for Brave browser
-  brave_path = "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
-  if os.path.exists(brave_path):
-      chrome_options.binary_location = brave_path
-      print("Using Brave browser")
-  else:
-      print("Using Chrome browser")
-
-  # Use the specified path for ChromeDriver
-  service = ChromeService(chromedriver_path)
+  service = Service(ChromeDriverManager().install())
   return webdriver.Chrome(service=service, options=chrome_options)
 
 def fetch_page_content(url, max_retries=3):
@@ -38,7 +30,7 @@ def fetch_page_content(url, max_retries=3):
           driver.quit()
           return page_content
       except Exception as e:
-          print(f"Error fetching page content (attempt {attempt + 1}): {str(e)}")
+          logger.error(f"Error fetching page content (attempt {attempt + 1}): {str(e)}")
           if attempt == max_retries - 1:
               raise
           time.sleep(5)
@@ -75,13 +67,6 @@ def parse_jobs(html_content):
 
   return jobs
 
-def scrape_jobs():
-  url = 'https://www.ycombinator.com/jobs'
+def scrape_jobs(url='https://www.ycombinator.com/jobs'):
   html_content = fetch_page_content(url)
   return parse_jobs(html_content)
-
-# Test the scraping
-jobs = scrape_jobs()
-print(f"Found {len(jobs)} job listings")
-for job in jobs[:5]:  # Print first 5 jobs as a sample
-  print(job)
