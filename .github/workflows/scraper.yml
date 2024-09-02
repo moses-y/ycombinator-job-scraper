@@ -23,13 +23,25 @@ jobs:
 
     - name: Install ChromeDriver
       run: |
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+' | head -n 1)
-        CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
-        wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-        unzip chromedriver_linux64.zip -d $HOME/chromedriver
-        sudo mv -f $HOME/chromedriver/chromedriver /usr/local/bin/chromedriver
+        CHROME_VERSION=$(google-chrome --version | awk '{print \$3}' | awk -F. '{print \$1"."\$2"."\$3}')
+        echo "Chrome Version: $CHROME_VERSION"
+        
+        # You need to manually update this mapping as new versions are released
+        case "${CHROME_VERSION%%.*}" in
+          "128") CHROMEDRIVER_VERSION="128.0.6228.0";;
+          "127") CHROMEDRIVER_VERSION="127.0.6387.0";;
+          "126") CHROMEDRIVER_VERSION="126.0.6387.0";;
+          *) echo "Unsupported Chrome version. Please update the version mapping."; exit 1;;
+        esac
+        
+        echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
+        
+        wget -N "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip"
+        unzip chromedriver-linux64.zip
+        sudo mv -f chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
         sudo chmod +x /usr/local/bin/chromedriver
-
+        rm -rf chromedriver-linux64 chromedriver-linux64.zip
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
