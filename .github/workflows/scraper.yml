@@ -23,7 +23,7 @@ jobs:
 
     - name: Install ChromeDriver
       run: |
-        CHROME_VERSION=$(google-chrome --version | awk '{print \$3}' | awk -F. '{print \$1}')
+        CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | awk -F. '{print $1}')
         echo "Chrome Version: $CHROME_VERSION"
         
         CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
