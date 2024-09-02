@@ -9,10 +9,10 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
@@ -23,24 +23,20 @@ jobs:
 
     - name: Install ChromeDriver
       run: |
-        CHROME_VERSION=$(google-chrome --version | awk '{print \$3}' | awk -F. '{print \$1"."\$2"."\$3}')
+        CHROME_VERSION=$(google-chrome --version | awk '{print \$3}' | awk -F. '{print \$1}')
         echo "Chrome Version: $CHROME_VERSION"
         
-        # You need to manually update this mapping as new versions are released
-        case "${CHROME_VERSION%%.*}" in
-          "128") CHROMEDRIVER_VERSION="128.0.6228.0";;
-          "127") CHROMEDRIVER_VERSION="127.0.6387.0";;
-          "126") CHROMEDRIVER_VERSION="126.0.6387.0";;
-          *) echo "Unsupported Chrome version. Please update the version mapping."; exit 1;;
-        esac
+        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
+        echo "Latest ChromeDriver Version: $CHROMEDRIVER_VERSION"
         
-        echo "ChromeDriver Version: $CHROMEDRIVER_VERSION"
-        
-        wget -N "https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/$CHROMEDRIVER_VERSION/linux64/chromedriver-linux64.zip"
-        unzip chromedriver-linux64.zip
-        sudo mv -f chromedriver-linux64/chromedriver /usr/local/bin/chromedriver
+        wget -N "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
+        unzip chromedriver_linux64.zip
+        sudo mv -f chromedriver /usr/local/bin/chromedriver
         sudo chmod +x /usr/local/bin/chromedriver
-        rm -rf chromedriver-linux64 chromedriver-linux64.zip
+        rm chromedriver_linux64.zip
+        
+        echo "ChromeDriver installation completed"
+        chromedriver --version
     
     - name: Install dependencies
       run: |
